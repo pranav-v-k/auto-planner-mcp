@@ -16,4 +16,4 @@ def resequence_build_plan(delay_reason: str, missing_option: str) -> dict:
     available = [car for car in queue if car.get("seat_type") != missing_option]
     delayed = [car for car in queue if car.get("seat_type") == missing_option]
     
-    return {"reason": delay_reason, "new_sequence": available + delayed}
+    return {"reason": delay_reason, "new_sequence": available + delay } 
