@@ -1,10 +1,10 @@
 # AI Production Planner MCP (`auto-planner-mcp`)
 
-An Industry 4.0 AI Production Planning MCP (Model Context Protocol) Server for automotive manufacturing lines. This system provides intelligent assembly queue management, Just-In-Sequence (JIS) inventory tracking, Overall Equipment Effectiveness (OEE) analytics, and downtime financial impact estimations.
+An Industry 4.0 AI Production Planning MCP (Model Context Protocol) Server for automotive manufacturing lines. This system provides unified assembly queue management, intelligent build plan resequencing, Just-In-Sequence (JIS) inventory tracking, Overall Equipment Effectiveness (OEE) analytics, and financial downtime impact calculations.
 
 ---
 
-## 📐 Project Architecture & Structure
+## 📐 System Architecture & Structure
 
 ```text
 auto-planner-mcp/
@@ -12,11 +12,11 @@ auto-planner-mcp/
 │   ├── assembly_queue.json    # Active vehicle assembly queue (VINs, models, seat types)
 │   ├── inventory_jit.json     # Just-In-Time/Sequence parts inventory & ETA tracking
 │   └── station_oee.json       # Assembly station efficiency & operational status
-├── teammates/                 # Modular Python Logic Engines
-│   ├── dev_a/                 # Assembly Queue & Resequencing Engine
+├── teammates/                 # Core Production Logic Engines
+│   ├── dev_a/                 # Assembly Queue & Resequencing Module
 │   │   ├── __init__.py
 │   │   └── logic.py
-│   └── dev_b/                 # Inventory & OEE Analytics Engine
+│   └── dev_b/                 # Inventory & OEE Analytics Module
 │       ├── __init__.py
 │       └── logic.py
 ├── package.json               # NitroStack MCP server configuration
@@ -25,25 +25,25 @@ auto-planner-mcp/
 
 ---
 
-## ✨ Features & Functionality
+## ✨ Features & Production Tools
 
-### 🚘 Developer A Logic (`teammates/dev_a/logic.py`)
+### 🚘 Assembly Queue & Resequencing Module
 - **`get_assembly_sequence(shift_id: str, line_id: str)`**
-  - Retrieves the active build queue for a given shift and assembly line.
+  - Retrieves the active build queue for a specified shift and assembly line.
 - **`resequence_build_plan(delay_reason: str, missing_option: str)`**
-  - Dynamically resequences the assembly plan when part shortages occur (e.g., missing seat trims) by prioritizing available configurations and placing delayed VINs at the back of the queue.
+  - Dynamically resequences the assembly line schedule when part shortages occur (e.g., missing seat trims) by prioritizing available vehicle configurations and shifting delayed VINs to the end of the queue.
 
-### 🏭 Developer B Logic (`teammates/dev_b/logic.py`)
+### 🏭 Inventory & Equipment Analytics Module
 - **`check_jis_inventory(part_number: str, vin_sequence: str = None)`**
-  - Checks stock levels, supplier ETAs, and shortage indicators for required JIS automotive parts.
+  - Checks stock levels, supplier ETAs, and shortage indicators for required JIS automotive components.
 - **`calculate_station_oee(station_id: str)`**
-  - Calculates Overall Equipment Effectiveness ($OEE = Availability \times Performance \times Quality$) for manufacturing stations (e.g., `STATION_WELDING`).
+  - Calculates Overall Equipment Effectiveness ($OEE = Availability \times Performance \times Quality$) for assembly stations (e.g., `STATION_WELDING`).
 - **`estimate_downtime_cost(stopped_station_id: str)`**
-  - Computes financial losses based on station downtime duration (assumes $\$22,000/\text{min}$ for non-running stations).
+  - Computes estimated financial losses based on station downtime duration (assumes $\$22,000/\text{min}$ for non-running stations).
 
 ---
 
-## 📊 Mock Data Schemas
+## 📊 Data Schemas
 
 | Dataset | File Path | Key Attributes |
 | :--- | :--- | :--- |
@@ -53,19 +53,28 @@ auto-planner-mcp/
 
 ---
 
-## 🧪 Testing & Verification
+## 🧪 Verification & Testing
 
-### Run Teammate Logic Verification
-To test Developer A & B logic together via Python:
+To test and verify the complete AI Production Planner logic suite in Python:
+
 ```bash
 python3 -c "
 from teammates.dev_a.logic import get_assembly_sequence, resequence_build_plan
 from teammates.dev_b.logic import check_jis_inventory, calculate_station_oee, estimate_downtime_cost
 
+print('=== Assembly Sequence ===')
 print(get_assembly_sequence('SHIFT_1', 'LINE_A'))
+
+print('\n=== Resequenced Plan ===')
 print(resequence_build_plan('Seat Shortage', 'RED_LEATHER'))
+
+print('\n=== JIS Inventory Status ===')
 print(check_jis_inventory('RED_LEATHER'))
+
+print('\n=== Station OEE ===')
 print(calculate_station_oee('STATION_WELDING'))
+
+print('\n=== Downtime Cost Estimate ===')
 print(estimate_downtime_cost('STATION_PAINT'))
 "
 ```
