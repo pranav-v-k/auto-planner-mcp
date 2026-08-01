@@ -19,7 +19,6 @@ auto-planner-mcp/
 │   └── dev_b/                 # Inventory & OEE Analytics Engine
 │       ├── __init__.py
 │       └── logic.py
-├── test_dev_b.py              # Developer B verification & test suite
 ├── package.json               # NitroStack MCP server configuration
 └── tsconfig.json              # TypeScript configuration
 ```
@@ -57,11 +56,6 @@ auto-planner-mcp/
 ## 🧪 Testing & Verification
 
 ### Run Teammate Logic Verification
-To verify Developer B's inventory, OEE, and downtime tools:
-```bash
-python3 test_dev_b.py
-```
-
 To test Developer A & B logic together via Python:
 ```bash
 python3 -c "
