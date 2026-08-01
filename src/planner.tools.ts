@@ -17,7 +17,8 @@ async function runPythonLogic(code: string): Promise<any> {
 export class PlannerTools {
   @Tool({
     name: 'get_assembly_sequence',
-    description: 'Get active assembly sequence for a given shift and line',
+    description:
+      'Get active assembly sequence for a given shift and line [UI Directive: A visual widget is rendered for this response. Provide ONLY a brief 1-sentence summary. Do not repeat raw sequence lists, VIN tables, or metric lists in markdown text.]',
     inputSchema: z.object({
       shift_id: z.string().describe('ID of the shift'),
       line_id: z.string().describe('ID of the assembly line'),
@@ -35,6 +36,7 @@ export class PlannerTools {
           { vin: 'VIN-101', model: 'SUV-LX', trim: 'Luxury', seat_type: 'RED_LEATHER', status: 'QUEUED' },
           { vin: 'VIN-102', model: 'SEDAN-SE', trim: 'Standard', seat_type: 'BLACK_FABRIC', status: 'QUEUED' },
         ],
+        ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
       },
     },
   })
@@ -48,12 +50,17 @@ export class PlannerTools {
       line_id: input.line_id,
     });
     const pythonCode = `import json; from teammates.dev_a.logic import get_assembly_sequence; print(json.dumps(get_assembly_sequence(${JSON.stringify(input.shift_id)}, ${JSON.stringify(input.line_id)})))`;
-    return await runPythonLogic(pythonCode);
+    const result = await runPythonLogic(pythonCode);
+    return {
+      ...result,
+      ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
+    };
   }
 
   @Tool({
     name: 'resequence_build_plan',
-    description: 'Resequence build plan based on delay reason and missing option',
+    description:
+      'Resequence build plan based on delay reason and missing option [UI Directive: A visual widget is rendered for this response. Provide ONLY a brief 1-sentence summary. Do not repeat raw sequence lists, VIN tables, or metric lists in markdown text.]',
     inputSchema: z.object({
       delay_reason: z.string().describe('Reason for delay or resequencing'),
       missing_option: z.string().describe('Missing option or part constraint causing delay'),
@@ -70,6 +77,7 @@ export class PlannerTools {
           { vin: 'VIN-102', model: 'SEDAN-SE', trim: 'Standard', seat_type: 'BLACK_FABRIC', status: 'QUEUED' },
           { vin: 'VIN-101', model: 'SUV-LX', trim: 'Luxury', seat_type: 'RED_LEATHER', status: 'QUEUED' },
         ],
+        ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
       },
     },
   })
@@ -83,7 +91,11 @@ export class PlannerTools {
       missing_option: input.missing_option,
     });
     const pythonCode = `import json; from teammates.dev_a.logic import resequence_build_plan; print(json.dumps(resequence_build_plan(${JSON.stringify(input.delay_reason)}, ${JSON.stringify(input.missing_option)})))`;
-    return await runPythonLogic(pythonCode);
+    const result = await runPythonLogic(pythonCode);
+    return {
+      ...result,
+      ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
+    };
   }
 
   @Tool({
@@ -124,7 +136,8 @@ export class PlannerTools {
 
   @Tool({
     name: 'calculate_station_oee',
-    description: 'Calculate Overall Equipment Effectiveness (OEE) for a station',
+    description:
+      'Calculate Overall Equipment Effectiveness (OEE) for a station [UI Directive: A visual widget is rendered for this response. Provide ONLY a brief 1-sentence summary. Do not repeat raw sequence lists, VIN tables, or metric lists in markdown text.]',
     inputSchema: z.object({
       station_id: z.string().describe('ID of the station'),
     }),
@@ -141,6 +154,7 @@ export class PlannerTools {
         quality: 0.99,
         oee_percent: 82.76,
         status: 'RUNNING',
+        ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
       },
     },
   })
@@ -151,12 +165,17 @@ export class PlannerTools {
   ) {
     ctx.logger.info('Calculating station OEE', { station_id: input.station_id });
     const pythonCode = `import json; from teammates.dev_b.logic import calculate_station_oee; print(json.dumps(calculate_station_oee(${JSON.stringify(input.station_id)})))`;
-    return await runPythonLogic(pythonCode);
+    const result = await runPythonLogic(pythonCode);
+    return {
+      ...result,
+      ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
+    };
   }
 
   @Tool({
     name: 'estimate_downtime_cost',
-    description: 'Estimate financial cost of downtime for a stopped station',
+    description:
+      'Estimate financial cost of downtime for a stopped station [UI Directive: A visual widget is rendered for this response. Provide ONLY a brief 1-sentence summary. Do not repeat raw sequence lists, VIN tables, or metric lists in markdown text.]',
     inputSchema: z.object({
       stopped_station_id: z.string().describe('ID of the stopped station'),
     }),
@@ -171,6 +190,7 @@ export class PlannerTools {
         status: 'MAINTENANCE',
         downtime_minutes: 60,
         estimated_cost: 1320000,
+        ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
       },
     },
   })
@@ -183,6 +203,10 @@ export class PlannerTools {
       stopped_station_id: input.stopped_station_id,
     });
     const pythonCode = `import json; from teammates.dev_b.logic import estimate_downtime_cost; print(json.dumps(estimate_downtime_cost(${JSON.stringify(input.stopped_station_id)})))`;
-    return await runPythonLogic(pythonCode);
+    const result = await runPythonLogic(pythonCode);
+    return {
+      ...result,
+      ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
+    };
   }
 }
