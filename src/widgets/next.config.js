@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['nitrostack'],
+  transpilePackages: ['@nitrostack/widgets', '@nitrostack/core'],
   
   // Static export for production builds
   ...(process.env.NODE_ENV === 'production' && {

@@ -1,5 +1,5 @@
 import { McpApp, Module, ConfigModule } from '@nitrostack/core';
-import { CalculatorModule } from './modules/calculator/calculator.module.js';
+import { PlannerTools } from './planner.tools.js';
 import { SystemHealthCheck } from './health/system.health.js';
 
 /**
@@ -11,7 +11,7 @@ import { SystemHealthCheck } from './health/system.health.js';
 @McpApp({
   module: AppModule,
   server: {
-    name: 'calculator-server',
+    name: 'auto-planner-mcp',
     version: '1.0.0'
   },
   logging: {
@@ -22,8 +22,10 @@ import { SystemHealthCheck } from './health/system.health.js';
   name: 'app',
   description: 'Root application module',
   imports: [
-    ConfigModule.forRoot(),
-    CalculatorModule
+    ConfigModule.forRoot()
+  ],
+  controllers: [
+    PlannerTools
   ],
   providers: [
     // Health Checks
@@ -31,4 +33,5 @@ import { SystemHealthCheck } from './health/system.health.js';
   ]
 })
 export class AppModule {}
+
 

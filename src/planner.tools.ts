@@ -1,0 +1,188 @@
+import { ToolDecorator as Tool, Widget, ExecutionContext, z } from '@nitrostack/core';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+/**
+ * Helper function to execute Python logic scripts and return parsed JSON output.
+ */
+async function runPythonLogic(code: string): Promise<any> {
+  const { stdout } = await execAsync(`python3 -c ${JSON.stringify(code)}`, {
+    cwd: process.cwd(),
+  });
+  return JSON.parse(stdout.trim());
+}
+
+export class PlannerTools {
+  @Tool({
+    name: 'get_assembly_sequence',
+    description: 'Get active assembly sequence for a given shift and line',
+    inputSchema: z.object({
+      shift_id: z.string().describe('ID of the shift'),
+      line_id: z.string().describe('ID of the assembly line'),
+    }),
+    invocation: {
+      invoking: 'Fetching assembly queue sequence...',
+      invoked: 'Assembly sequence loaded',
+    },
+    examples: {
+      request: { shift_id: 'S1', line_id: 'L1' },
+      response: {
+        shift: 'S1',
+        line: 'L1',
+        active_queue: [
+          { vin: 'VIN-101', model: 'SUV-LX', trim: 'Luxury', seat_type: 'RED_LEATHER', status: 'QUEUED' },
+          { vin: 'VIN-102', model: 'SEDAN-SE', trim: 'Standard', seat_type: 'BLACK_FABRIC', status: 'QUEUED' },
+        ],
+      },
+    },
+  })
+  @Widget('assembly-queue-widget')
+  async getAssemblySequence(
+    input: { shift_id: string; line_id: string },
+    ctx: ExecutionContext
+  ) {
+    ctx.logger.info('Fetching assembly sequence', {
+      shift_id: input.shift_id,
+      line_id: input.line_id,
+    });
+    const pythonCode = `import json; from teammates.dev_a.logic import get_assembly_sequence; print(json.dumps(get_assembly_sequence(${JSON.stringify(input.shift_id)}, ${JSON.stringify(input.line_id)})))`;
+    return await runPythonLogic(pythonCode);
+  }
+
+  @Tool({
+    name: 'resequence_build_plan',
+    description: 'Resequence build plan based on delay reason and missing option',
+    inputSchema: z.object({
+      delay_reason: z.string().describe('Reason for delay or resequencing'),
+      missing_option: z.string().describe('Missing option or part constraint causing delay'),
+    }),
+    invocation: {
+      invoking: 'Resequencing build plan...',
+      invoked: 'Build plan resequenced',
+    },
+    examples: {
+      request: { delay_reason: 'parts delay', missing_option: 'RED_LEATHER' },
+      response: {
+        reason: 'parts delay',
+        new_sequence: [
+          { vin: 'VIN-102', model: 'SEDAN-SE', trim: 'Standard', seat_type: 'BLACK_FABRIC', status: 'QUEUED' },
+          { vin: 'VIN-101', model: 'SUV-LX', trim: 'Luxury', seat_type: 'RED_LEATHER', status: 'QUEUED' },
+        ],
+      },
+    },
+  })
+  @Widget('assembly-queue-widget')
+  async resequenceBuildPlan(
+    input: { delay_reason: string; missing_option: string },
+    ctx: ExecutionContext
+  ) {
+    ctx.logger.info('Resequencing build plan', {
+      delay_reason: input.delay_reason,
+      missing_option: input.missing_option,
+    });
+    const pythonCode = `import json; from teammates.dev_a.logic import resequence_build_plan; print(json.dumps(resequence_build_plan(${JSON.stringify(input.delay_reason)}, ${JSON.stringify(input.missing_option)})))`;
+    return await runPythonLogic(pythonCode);
+  }
+
+  @Tool({
+    name: 'check_jis_inventory',
+    description: 'Check Just-in-Sequence (JIS) inventory availability for a part and optional VIN sequence',
+    inputSchema: z.object({
+      part_number: z.string().describe('JIS part number to check'),
+      vin_sequence: z.string().optional().describe('Optional VIN sequence number'),
+    }),
+    invocation: {
+      invoking: 'Checking JIS inventory...',
+      invoked: 'JIS inventory checked',
+    },
+    examples: {
+      request: { part_number: 'SEAT-RED-01', vin_sequence: 'VIN-101' },
+      response: {
+        part_number: 'SEAT-RED-01',
+        stock: 0,
+        supplier_eta: null,
+        shortage: true,
+        available: false,
+        vin_sequence: 'VIN-101',
+      },
+    },
+  })
+  async checkJisInventory(
+    input: { part_number: string; vin_sequence?: string },
+    ctx: ExecutionContext
+  ) {
+    ctx.logger.info('Checking JIS inventory', {
+      part_number: input.part_number,
+      vin_sequence: input.vin_sequence,
+    });
+    const vinArg = input.vin_sequence !== undefined ? JSON.stringify(input.vin_sequence) : 'None';
+    const pythonCode = `import json; from teammates.dev_b.logic import check_jis_inventory; print(json.dumps(check_jis_inventory(${JSON.stringify(input.part_number)}, ${vinArg})))`;
+    return await runPythonLogic(pythonCode);
+  }
+
+  @Tool({
+    name: 'calculate_station_oee',
+    description: 'Calculate Overall Equipment Effectiveness (OEE) for a station',
+    inputSchema: z.object({
+      station_id: z.string().describe('ID of the station'),
+    }),
+    invocation: {
+      invoking: 'Calculating station OEE...',
+      invoked: 'Station OEE calculated',
+    },
+    examples: {
+      request: { station_id: 'STATION_WELDING' },
+      response: {
+        station_id: 'STATION_WELDING',
+        availability: 0.95,
+        performance: 0.88,
+        quality: 0.99,
+        oee_percent: 82.76,
+        status: 'RUNNING',
+      },
+    },
+  })
+  @Widget('oee-widget')
+  async calculateStationOee(
+    input: { station_id: string },
+    ctx: ExecutionContext
+  ) {
+    ctx.logger.info('Calculating station OEE', { station_id: input.station_id });
+    const pythonCode = `import json; from teammates.dev_b.logic import calculate_station_oee; print(json.dumps(calculate_station_oee(${JSON.stringify(input.station_id)})))`;
+    return await runPythonLogic(pythonCode);
+  }
+
+  @Tool({
+    name: 'estimate_downtime_cost',
+    description: 'Estimate financial cost of downtime for a stopped station',
+    inputSchema: z.object({
+      stopped_station_id: z.string().describe('ID of the stopped station'),
+    }),
+    invocation: {
+      invoking: 'Estimating downtime cost...',
+      invoked: 'Downtime cost estimated',
+    },
+    examples: {
+      request: { stopped_station_id: 'STATION_PAINT' },
+      response: {
+        station_id: 'STATION_PAINT',
+        status: 'MAINTENANCE',
+        downtime_minutes: 60,
+        estimated_cost: 1320000,
+      },
+    },
+  })
+  @Widget('oee-widget')
+  async estimateDowntimeCost(
+    input: { stopped_station_id: string },
+    ctx: ExecutionContext
+  ) {
+    ctx.logger.info('Estimating downtime cost', {
+      stopped_station_id: input.stopped_station_id,
+    });
+    const pythonCode = `import json; from teammates.dev_b.logic import estimate_downtime_cost; print(json.dumps(estimate_downtime_cost(${JSON.stringify(input.stopped_station_id)})))`;
+    return await runPythonLogic(pythonCode);
+  }
+}
