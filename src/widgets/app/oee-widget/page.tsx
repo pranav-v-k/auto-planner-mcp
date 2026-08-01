@@ -4,20 +4,27 @@ import React from 'react';
 import { createWidget, WidgetComponentProps } from '../../lib/createWidget';
 
 export interface OeeData {
-  station_id: string;
+  station_id?: string;
+  stationId?: string;
   status: string;
   availability?: number;
   performance?: number;
   quality?: number;
   oee_percent?: number;
   downtime_minutes?: number;
+  estimatedHours?: number;
   estimated_cost?: number;
+  totalCost?: number;
 }
 
 function OeeWidgetComponent({ data, theme }: WidgetComponentProps<OeeData>) {
   const isDark = theme === 'dark';
   const isRunning = data.status === 'RUNNING';
   
+  const stationId = data.station_id || data.stationId || 'Unknown Station';
+  const downtimeMins = data.downtime_minutes ?? (data.estimatedHours !== undefined ? Math.round(data.estimatedHours * 60) : 0);
+  const cost = data.estimated_cost ?? data.totalCost ?? 0;
+
   const bg = isDark ? '#0d1117' : '#ffffff';
   const cardBg = isDark ? '#161b22' : '#f6f8fa';
   const textPrimary = isDark ? '#f0f6fc' : '#1f2328';
@@ -56,7 +63,7 @@ function OeeWidgetComponent({ data, theme }: WidgetComponentProps<OeeData>) {
             Station Analytics & OEE
           </div>
           <h2 style={{ margin: '4px 0 0 0', fontSize: '22px', fontWeight: 700 }}>
-            {data.station_id || 'Unknown Station'}
+            {stationId}
           </h2>
         </div>
         <span
@@ -144,7 +151,7 @@ function OeeWidgetComponent({ data, theme }: WidgetComponentProps<OeeData>) {
       )}
 
       {/* Downtime Alert Banner */}
-      {(!isRunning || (data.downtime_minutes ?? 0) > 0 || (data.estimated_cost ?? 0) > 0) && (
+      {(!isRunning || downtimeMins > 0 || cost > 0) && (
         <div
           style={{
             background: isDark ? 'rgba(248, 81, 73, 0.1)' : 'rgba(255, 235, 235, 1)',
@@ -162,7 +169,7 @@ function OeeWidgetComponent({ data, theme }: WidgetComponentProps<OeeData>) {
             </div>
             <div style={{ fontSize: '13px', color: textSecondary, marginTop: '4px' }}>
               Station is currently in <strong style={{ color: textPrimary }}>{data.status}</strong> mode. Total duration:{' '}
-              <strong style={{ color: textPrimary }}>{data.downtime_minutes ?? 0} mins</strong>.
+              <strong style={{ color: textPrimary }}>{downtimeMins} mins</strong>.
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -170,7 +177,7 @@ function OeeWidgetComponent({ data, theme }: WidgetComponentProps<OeeData>) {
               Estimated Financial Cost
             </div>
             <div style={{ fontSize: '22px', fontWeight: 800, color: '#f85149', marginTop: '2px' }}>
-              {formatCurrency(data.estimated_cost)}
+              {formatCurrency(cost)}
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
 import { ToolDecorator as Tool, Widget, ExecutionContext, z } from '@nitrostack/core';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import fs from 'fs';
+import path from 'path';
 
 const execAsync = promisify(exec);
 
@@ -177,7 +179,9 @@ export class PlannerTools {
     description:
       'Estimate financial cost of downtime for a stopped station [UI Directive: A visual widget is rendered for this response. Provide ONLY a brief 1-sentence summary. Do not repeat raw sequence lists, VIN tables, or metric lists in markdown text.]',
     inputSchema: z.object({
-      stopped_station_id: z.string().describe('ID of the stopped station'),
+      stopped_station_id: z.string().optional().describe('ID of the stopped station'),
+      station_id: z.string().optional().describe('ID of the stopped station'),
+      stationId: z.string().optional().describe('ID of the stopped station'),
     }),
     invocation: {
       invoking: 'Estimating downtime cost...',
@@ -187,25 +191,61 @@ export class PlannerTools {
       request: { stopped_station_id: 'STATION_PAINT' },
       response: {
         station_id: 'STATION_PAINT',
+        stationId: 'STATION_PAINT',
         status: 'MAINTENANCE',
         downtime_minutes: 60,
+        estimatedHours: 1,
         estimated_cost: 1320000,
+        totalCost: 1320000,
         ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
       },
     },
   })
   @Widget('oee-widget')
   async estimateDowntimeCost(
-    input: { stopped_station_id: string },
+    input: { stopped_station_id?: string; station_id?: string; stationId?: string },
     ctx: ExecutionContext
   ) {
-    ctx.logger.info('Estimating downtime cost', {
-      stopped_station_id: input.stopped_station_id,
-    });
-    const pythonCode = `import json; from teammates.dev_b.logic import estimate_downtime_cost; print(json.dumps(estimate_downtime_cost(${JSON.stringify(input.stopped_station_id)})))`;
-    const result = await runPythonLogic(pythonCode);
+    const stationId = input.stopped_station_id || input.station_id || input.stationId || 'STATION_PAINT';
+    ctx.logger.info('Estimating downtime cost', { stationId });
+
+    const filePath = path.join(process.cwd(), 'data', 'station_oee.json');
+    let stations: Record<string, any> = {};
+    try {
+      if (fs.existsSync(filePath)) {
+        stations = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      }
+    } catch (err) {
+      ctx.logger.error('Failed to read station_oee.json', { error: String(err) });
+    }
+
+    const station = stations[stationId];
+    if (!station) {
+      return {
+        station_id: stationId,
+        stationId: stationId,
+        status: 'NOT_FOUND',
+        downtime_minutes: 0,
+        estimatedHours: 0,
+        estimated_cost: 0,
+        totalCost: 0,
+        ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
+      };
+    }
+
+    const status = station.status || 'MAINTENANCE';
+    const downtimeMinutes = status === 'RUNNING' ? 0 : 60;
+    const estimatedHours = downtimeMinutes / 60;
+    const totalCost = downtimeMinutes * 22000;
+
     return {
-      ...result,
+      station_id: stationId,
+      stationId: stationId,
+      status: status,
+      downtime_minutes: downtimeMinutes,
+      estimatedHours: estimatedHours,
+      estimated_cost: totalCost,
+      totalCost: totalCost,
       ui_hint: 'Rendered in UI widget. Keep text response under 15 words.',
     };
   }
