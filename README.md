@@ -53,34 +53,6 @@ auto-planner-mcp/
 
 ---
 
-## 🧪 Verification & Testing
-
-To test and verify the complete AI Production Planner logic suite in Python:
-
-```bash
-python3 -c "
-from teammates.dev_a.logic import get_assembly_sequence, resequence_build_plan
-from teammates.dev_b.logic import check_jis_inventory, calculate_station_oee, estimate_downtime_cost
-
-print('=== Assembly Sequence ===')
-print(get_assembly_sequence('SHIFT_1', 'LINE_A'))
-
-print('\n=== Resequenced Plan ===')
-print(resequence_build_plan('Seat Shortage', 'RED_LEATHER'))
-
-print('\n=== JIS Inventory Status ===')
-print(check_jis_inventory('RED_LEATHER'))
-
-print('\n=== Station OEE ===')
-print(calculate_station_oee('STATION_WELDING'))
-
-print('\n=== Downtime Cost Estimate ===')
-print(estimate_downtime_cost('STATION_PAINT'))
-"
-```
-
----
-
 ## 🚀 Running the MCP Server
 
 ```bash
